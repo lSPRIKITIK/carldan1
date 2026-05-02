@@ -8,7 +8,7 @@
         <form action="{{ route('products.index') }}" method="GET" class="flex items-center gap-2">
             <div class="relative w-64">
                 <input type="text" name="search" value="{{ request('search') }}" 
-                    placeholder="Search name or type..." 
+                    placeholder="Search Product Name" 
                     class="border p-2 pr-10 rounded w-full shadow-sm focus:ring-2 focus:ring-blue-300 outline-none">
                 @if(request('search'))
                     <a href="{{ route('products.index') }}" class="absolute right-3 top-2.5 text-gray-400 hover:text-red-500 transition" title="Clear Search">

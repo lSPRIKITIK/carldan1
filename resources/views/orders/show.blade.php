@@ -3,7 +3,7 @@
 @section('content')
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-3xl font-bold text-gray-800">
-            Order #PO-{{ str_pad($order->id, 3, '0', STR_PAD_LEFT) }} Command Center
+            Order #{{ str_pad($order->id, 3, '0', STR_PAD_LEFT) }} Command Center
         </h2>
         <a href="{{ route('orders.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition">
             Back to Orders

@@ -8,7 +8,7 @@
             <form action="{{ route('clients.index') }}" method="GET" class="flex items-center gap-2">
                 <div class="relative w-64">
                     <input type="text" name="search" value="{{ request('search') }}" 
-                           placeholder="Search name or contact..." 
+                           placeholder="Search Name or Contact" 
                            class="border p-2 pr-10 rounded w-full shadow-sm focus:ring-2 focus:ring-blue-300 outline-none">
                     
                     @if(request('search'))

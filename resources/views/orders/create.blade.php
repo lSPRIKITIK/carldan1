@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <h2 class="text-2xl font-bold mb-6">Create New Order (V2)</h2>
+    <h2 class="text-2xl font-bold mb-6">Create New Order</h2>
 
     <form action="{{ route('orders.store') }}" method="POST" class="max-w-2xl">
         @csrf
@@ -59,7 +59,7 @@
             </button>
         </div>
 
-        <button type="submit" class="bg-blue-600 text-white font-bold px-6 py-3 rounded hover:bg-blue-700">Submit Order & Deduct Inventory</button>
+        <button type="submit" class="bg-blue-600 text-white font-bold px-6 py-3 rounded hover:bg-blue-700">Create Order</button>
     </form>
 
     <!-- JavaScript to handle dynamic rows and array indexes -->

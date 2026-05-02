@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <h2 class="text-2xl font-bold mb-6">Edit Order: PO-{{ str_pad($order->id, 3, '0', STR_PAD_LEFT) }}</h2>
+    <h2 class="text-2xl font-bold mb-6">Edit Order: #{{ str_pad($order->id, 3, '0', STR_PAD_LEFT) }}</h2>
 
     <form action="{{ route('orders.update', $order->id) }}" method="POST" class="max-w-3xl">
         @csrf

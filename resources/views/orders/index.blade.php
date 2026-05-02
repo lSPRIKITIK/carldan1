@@ -8,7 +8,7 @@
             <form action="{{ route('orders.index') }}" method="GET" class="flex items-center gap-2">
                 <div class="relative w-64">
                     <input type="text" name="search" value="{{ request('search') }}" 
-                        placeholder="Search name or contact..." 
+                        placeholder="Search Name or ID" 
                         class="border p-2 pr-10 rounded w-full shadow-sm focus:ring-2 focus:ring-blue-300 outline-none">
                     @if(request('search'))
                         <a href="{{ route('orders.index') }}" class="absolute right-3 top-2.5 text-gray-400 hover:text-red-500 transition" title="Clear Search">
@@ -45,7 +45,7 @@
                     <tr class="hover:bg-gray-50 transition">
                         
                         <td class="p-4 font-bold text-gray-500">
-                            #{{ str_pad($order->id, 1, '0', STR_PAD_LEFT) }}
+                            #{{ str_pad($order->id, 3, '0', STR_PAD_LEFT) }}
                         </td>
                         
                         <td class="p-4 text-gray-900 font-semibold">
