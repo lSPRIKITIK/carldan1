@@ -1,13 +1,30 @@
 @extends('layouts.app')
 
 @section('content')
+<h2 class="text-2xl font-bold text-gray-800">Client Directory</h2>
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Materials Inventory</h2>
+        <form action="{{ route('materials.index') }}" method="GET" class="flex gap-2">
+            <div class="relative">
+                <input type="text" name="search" value="{{ request('search') }}" 
+                    placeholder="Search Material or Type" 
+                    class="border p-2 pr-10 rounded w-80 shadow-sm focus:ring-2 focus:ring-blue-300 outline-none">
+                @if(request('search'))
+                    <a href="{{ route('materials.index') }}" class="absolute right-3 top-2.5 text-gray-400 hover:text-red-500 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                @endif
+            </div>
+            <button type="submit" class="bg-gray-800 text-white px-5 py-2 rounded hover:bg-gray-900 transition font-bold shadow-sm">
+                Search
+            </button>
+        </form>
+
         <a href="{{ route('materials.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition shadow-sm">
             + Add New Material
         </a>
     </div>
-
     <div class="bg-white rounded border overflow-x-auto shadow-sm">
         <table class="w-full text-sm text-left">
             <thead class="bg-gray-100 text-gray-700 font-bold uppercase text-xs tracking-wider">
@@ -15,7 +32,7 @@
                     <th class="p-4 border-b w-16">ID</th>
                     <th class="p-4 border-b">Material Name</th>
                     <th class="p-4 border-b">Type</th>
-                    <th class="p-4 border-b">Stock Level</th> <!-- Added missing header -->
+                    <th class="p-4 border-b">Stock Level</th>
                     <th class="p-4 border-b text-right">Unit Cost (PHP)</th>
                     <th class="p-4 border-b text-center">Actions</th>
                 </tr>
@@ -29,7 +46,6 @@
                             <span class="bg-gray-100 px-2 py-1 rounded text-xs">{{ $material->type }}</span>
                         </td>
                         
-                        <!-- Refined Stock Logic -->
                         <td class="p-4">
                             @php $stock = $material->stocks->last(); @endphp
                             @if($stock)
@@ -53,16 +69,22 @@
                         </td>
 
                         <td class="p-4 text-center">
-                            <div class="flex justify-center items-center gap-3">
-                                <!-- Quick Restock Link (Optional: if you built the route) -->
-                                <a href="#" class="text-green-600 hover:underline font-bold text-xs">Restock</a>
+                            <div class="flex justify-center items-center gap-4">
+                                <!-- THE RESTOCK LINK -->
+                                <a href="{{ route('stocks.create', ['material_id' => $material->id]) }}" class="text-green-600 hover:text-green-800 font-bold text-xs uppercase tracking-tight">
+                                    Restock
+                                </a>
                                 
-                                <a href="{{ route('materials.edit', $material->id) }}" class="text-blue-500 hover:underline font-bold text-xs">Edit</a>
+                                <a href="{{ route('materials.edit', $material->id) }}" class="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-tight">
+                                    Edit
+                                </a>
                                 
-                                <form action="{{ route('materials.destroy', $material->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this material? This will remove all associated stock records.');">
+                                <form action="{{ route('materials.destroy', $material->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this material?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-500 hover:underline font-bold text-xs bg-transparent border-none p-0">Delete</button>
+                                    <button type="submit" class="text-red-500 hover:text-red-700 font-bold text-xs uppercase tracking-tight bg-transparent border-none p-0">
+                                        Delete
+                                    </button>
                                 </form>
                             </div>
                         </td>
@@ -76,5 +98,8 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+    <div class="mt-6">
+        {{ $materials->links() }}
     </div>
 @endsection

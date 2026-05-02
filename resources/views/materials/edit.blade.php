@@ -18,7 +18,7 @@
         </div>
 
         <div class="mb-6">
-            <label class="block font-bold mb-1 text-gray-700">Unit Cost (PHP)</label>
+            <label class="block font-bold mb-1 text-gray-700">Unit Cost (₱)</label>
             <input type="number" name="unit_cost" step="0.01" min="0" value="{{ $material->unit_cost }}" required class="w-full border p-2 rounded focus:ring focus:ring-blue-200">
         </div>
 

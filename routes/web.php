@@ -9,6 +9,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\SupplierController;
 
 Route::get('/', function () {
     return redirect()->route('orders.index');
@@ -21,3 +23,6 @@ Route::resource('products', ProductController::class);
 Route::resource('orders', OrderController::class);
 Route::resource('payments', PaymentController::class);
 Route::put('/productions/{production}', [ProductionController::class, 'update'])->name('productions.update');
+Route::resource('suppliers', SupplierController::class);
+Route::get('/stocks/create', [StockController::class, 'create'])->name('stocks.create');
+Route::post('/stocks', [StockController::class, 'store'])->name('stocks.store');

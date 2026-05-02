@@ -7,13 +7,20 @@ use Illuminate\Http\Request;
 
 class MaterialController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $materials = Material::all();
-        
-        return view('materials.index', compact('materials'));
-    }
+        $search = $request->input('search');
 
+        $materials = \App\Models\Material::with('stocks')
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('type', 'LIKE', "%{$search}%");
+            })
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('materials.index', compact('materials', 'search'));
+    }
     public function create()
     {
         return view('materials.create');

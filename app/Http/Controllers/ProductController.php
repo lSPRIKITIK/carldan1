@@ -2,16 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Client;
-use App\Models\Material;
+
 use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = \App\Models\Product::with('materials')->get();
+        $search = $request->input('search');
+
+        $products = \App\Models\Product::when($search, function ($query, $search) {
+                return $query->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('type', 'LIKE', "%{$search}%");
+            })
+            ->paginate(10)
+            ->withQueryString();
+
         return view('products.index', compact('products'));
     }
 

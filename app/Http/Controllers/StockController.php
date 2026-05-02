@@ -19,10 +19,31 @@ class StockController extends Controller
         if ($stock) {
             $stock->increment('quantity', $request->amount);
             $stock->increment('stock_in', $request->amount);
-            // Record which supplier provided this batch
             $stock->update(['supplier_id' => $request->supplier_id]);
+        } else {
+            \App\Models\Stock::create([
+                'material_id' => $request->material_id,
+                'supplier_id' => $request->supplier_id,
+                'stock_in' => $request->amount,
+                'stock_out' => 0,
+                'quantity' => $request->amount,
+            ]);
         }
 
-        return back()->with('success', 'Stock updated successfully!');
+        return redirect()->route('materials.index')->with('success', 'Stock updated successfully!');
     }
+    
+    public function create(Request $request)
+    {
+        if (!$request->has('material_id')) {
+            return redirect()->route('materials.index')->with('error', 'Please select a material to restock from the table.');
+        }
+
+        $material = \App\Models\Material::findOrFail($request->material_id);
+        $suppliers = \App\Models\Supplier::all();
+
+        return view('stocks.create', compact('material', 'suppliers'));
+    }
+
+    
 }
