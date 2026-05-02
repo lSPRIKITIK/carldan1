@@ -33,7 +33,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <p class="text-sm text-gray-600">Total Order Value</p>
-                    <p class="text-2xl font-bold text-gray-800">PHP {{ number_format($order->products->sum(fn($p) => $p->pivot->price * $p->pivot->quantity), 2) }}</p>
+                    <p class="text-2xl font-bold text-gray-800">₱{{ number_format($order->products->sum(fn($p) => $p->pivot->price * $p->pivot->quantity), 2) }}</p>
                 </div>
                 <div class="text-right">
                     <p class="text-sm text-gray-600">Balance Status</p>
@@ -56,7 +56,7 @@
 
     <!-- Bottom Section: The Production Tracker -->
     <div class="bg-gray-800 text-white p-4 rounded-t-lg">
-        <h3 class="text-xl font-bold">🔨 Workshop Production Tracker</h3>
+        <h3 class="text-xl font-bold"> Workshop Production Tracker</h3>
     </div>
     
     <div class="bg-white border border-t-0 p-6 rounded-b-lg shadow-sm">

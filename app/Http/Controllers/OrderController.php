@@ -37,52 +37,34 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'employee_id' => 'required|exists:employees,id',
-            'order_date' => 'required|date',
-            'delivery_date' => 'nullable|date|after_or_equal:order_date',
-            'products' => 'required|array',
-            'products.*.product_id' => 'required|exists:products,id',
-            'products.*.quantity' => 'required|integer|min:1',
+        $order = \App\Models\Order::create([
+            'client_id'     => $request->client_id,
+            'employee_id'   => $request->employee_id,
+            'order_date'    => now(),
+            'status'        => 'Pending',
         ]);
 
-        DB::transaction(function () use ($request) {
-            
-            $order = Order::create([
-                'client_id' => $request->client_id,
-                'employee_id' => $request->employee_id,
-                'order_date' => $request->order_date,
-                'delivery_date' => $request->delivery_date,
-                'status' => 'Pending',
-            ]);
+        $totalPrice = 0;
+        foreach ($request->items as $item) {
+            $subtotal = $item['quantity'] * $item['price'];
+            $totalPrice += $subtotal;
 
-            foreach ($request->products as $item) {
-                $product = Product::with('materials')->findOrFail($item['product_id']);
-                $order->products()->attach($product->id, [
-                    'quantity' => $item['quantity'],
-                    'price' => $product->price 
-                ]);
-                foreach ($product->materials as $material) {
-                    $totalNeeded = $material->pivot->required_quantity * $item['quantity'];
-                    
-                    $stock = Stock::where('material_id', $material->id)->latest()->first();
-                    
-                    if ($stock) {
-                        $stock->decrement('quantity', $totalNeeded);
-                        $stock->increment('stock_out', $totalNeeded);
-                    }
-                }
-                \App\Models\Production::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'prod_status' => 'Pending',
-                ]);
-            }
-            
-        });
-        
-        return redirect()->route('orders.index')->with('success', 'Order created, inventory updated, and production tickets generated!');
+            $order->products()->attach($item['product_id'], [
+                'quantity' => $item['quantity'],
+                'price'    => $item['price']
+            ]);
+        }
+
+        \App\Models\Payment::create([
+            'order_id'       => $order->id,
+            'employee_id'    => $request->employee_id, 
+            'payment_method' => $request->payment_method, 
+            'payment_date'   => now(),
+            'amount'         => $totalPrice / 2, 
+            'reference_number' => $request->reference_number ?? 'DOWNPAYMENT',
+        ]);
+
+        return redirect()->route('orders.index')->with('success', 'Order created and 50% downpayment recorded!');
     }
     public function edit(Order $order)
     {

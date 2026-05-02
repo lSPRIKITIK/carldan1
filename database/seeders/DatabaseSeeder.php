@@ -3,11 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Material;
-use App\Models\Client;
-use App\Models\Employee;
-use App\Models\Product;
-use App\Models\Order;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,99 +12,67 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // ---------------------------------------------------
-        // 1. SEED MATERIALS (Matching V2 column names)
-        // ---------------------------------------------------
-        Material::create([
-            'name' => 'Mahogany Wood Base', 
-            'type' => 'Wood',
-            'unit_cost' => 150.00
-        ]);
-
-        Material::create([
-            'name' => 'Clear Acrylic Sheet', 
-            'type' => 'Plastic',
-            'unit_cost' => 250.00
-        ]);
-
-        Material::create([
-            'name' => 'Gold Engraving Plate', 
-            'type' => 'Metal',
-            'unit_cost' => 85.00
-        ]);
-
-        Material::create([
-            'name' => 'Mounting Screws', 
-            'type' => 'Hardware',
-            'unit_cost' => 2.50
-        ]);
-
-        // ---------------------------------------------------
-        // 2. SEED CLIENTS (Matching V2 column names)
-        // ---------------------------------------------------
-        Client::create([
-            'first_name' => 'Juan',
-            'middle_name' => 'Santos',
-            'last_name' => 'Dela Cruz',
-            'contact_number' => '09171234567',
-            'address' => 'Roxas Ave, Davao City'
-        ]);
+        // 1. Create baseline data
+        \App\Models\Client::factory(50)->create();
+        \App\Models\Supplier::factory(20)->create();
+        \App\Models\Material::factory(30)->create();
+        $products = \App\Models\Product::factory(20)->create();
         
-        Client::create([
-            'first_name' => 'Maria',
-            'middle_name' => null, // Middle name is nullable in our new database!
-            'last_name' => 'Clara',
-            'contact_number' => '09181234567',
-            'address' => 'Bolton St, Davao City'
-        ]);
+        // Ensure we have at least one employee[cite: 4]
+        $employee = \App\Models\Employee::first() ?? \App\Models\Employee::factory()->create();
 
-        Client::create([
-            'first_name' => 'John Kyle',
-            'middle_name' => null,
-            'last_name' => 'Banico',
-            'contact_number' => '09199998888',
-            'address' => 'Matina, Davao City'
-        ]);
-        // ---------------------------------------------------
-        // 3. SEED EMPLOYEES (Needed to handle orders)
-        // ---------------------------------------------------
-        $dexter = Employee::create([
-            'first_name' => 'Dexter',
-            'middle_name' => 'B.',
-            'last_name' => 'Aquino'
-        ]);
+        // 2. Create 50 Orders[cite: 7]
+        \App\Models\Order::factory(50)->create([
+            'employee_id' => $employee->id
+        ])->each(function ($order) use ($products, $employee) {
+            // Randomly pick 1 to 3 products for the order
+            $items = $products->random(rand(1, 3));
+            $totalOrderPrice = 0;
 
-        // ---------------------------------------------------
-        // 4. SEED PRODUCTS (With their Bill of Materials)
-        // ---------------------------------------------------
-        $plaque = Product::create([
-            'name' => 'Premium Wood Plaque',
-            'type' => 'Plaque',
-            'price' => 1500.00
-        ]);
+            foreach ($items as $product) {
+                $qty = rand(1, 10);
+                $priceAtTime = $product->price;
+                $totalOrderPrice += ($qty * $priceAtTime);
 
-        // Attach materials to the product (Recipe: 1 Wood, 1 Gold Plate, 2 Screws)
-        // Note: Assuming Wood is ID 1, Gold Plate is ID 3, Screws is ID 4 from our earlier seeder
-        $plaque->materials()->sync([
-            1 => ['required_quantity' => 1],
-            3 => ['required_quantity' => 1],
-            4 => ['required_quantity' => 2],
-        ]);
+                // Attach to your pivot table (assuming product_order)[cite: 1]
+                $order->products()->attach($product->id, [
+                    'quantity' => $qty,
+                    'price'    => $priceAtTime
+                ]);
 
-        // ---------------------------------------------------
-        // 5. SEED AN ORDER (The Shopping Cart)
-        // ---------------------------------------------------
-        $order = Order::create([
-            'client_id' => 1, // Juan Dela Cruz
-            'employee_id' => $dexter->id,
-            'order_date' => now(),
-            'status' => 'Pending'
-        ]);
+                // Create Production record[cite: 9]
+                \App\Models\Production::create([
+                    'order_id'      => $order->id,
+                    'product_id'    => $product->id,
+                    'prod_status'   => $order->status === 'Completed' ? 'Completed' : 'Pending',
+                    'prod_note'     => 'Auto-generated production task.',
+                    'prod_start_date' => $order->order_date,
+                ]);
+            }
 
-        // Attach the product to the order (Locking in the historical price)
-        $order->products()->attach($plaque->id, [
-            'quantity' => 5,
-            'price' => $plaque->price
-        ]);
+            // 3. SEED PAYMENTS
+            
+            // Always create the 50% Downpayment
+            \App\Models\Payment::create([
+                'order_id'         => $order->id,
+                'employee_id'      => $employee->id,
+                'payment_method'   => fake()->randomElement(['Cash', 'GCash', 'Bank Transfer']),
+                'payment_date'     => $order->order_date,
+                'amount'           => $totalOrderPrice / 2,
+                'reference_number' => 'DOWNPAYMENT',
+            ]);
+
+            // If the order is "Completed", create the final 50% payment
+            if ($order->status === 'Completed') {
+                \App\Models\Payment::create([
+                    'order_id'         => $order->id,
+                    'employee_id'      => $employee->id,
+                    'payment_method'   => fake()->randomElement(['Cash', 'GCash', 'Bank Transfer']),
+                    'payment_date'     => $order->delivery_date ?? now(),
+                    'amount'           => $totalOrderPrice / 2,
+                    'reference_number' => 'SETTLEMENT_' . strtoupper(fake()->bothify('??###')),
+                ]);
+            }
+        });
     }
 }

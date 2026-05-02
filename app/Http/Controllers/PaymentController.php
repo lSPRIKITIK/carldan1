@@ -28,13 +28,18 @@ class PaymentController extends Controller
         return view('payments.index', compact('payments'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $order = \App\Models\Order::with('products')->findOrFail($request->order_id);
         
-        $orders = Order::with('client')->get();
-        $employees = Employee::all();
-        
-        return view('payments.create', compact('orders', 'employees'));
+        $totalAmount = $order->products->sum(function($product) {
+            return $product->pivot->quantity * $product->pivot->price;
+        });
+
+        $alreadyPaid = \App\Models\Payment::where('order_id', $order->id)->sum('amount');
+        $remainingBalance = $totalAmount - $alreadyPaid;
+
+        return view('payments.create', compact('order', 'remainingBalance'));
     }
 
     public function store(Request $request)
