@@ -26,3 +26,4 @@ Route::put('/productions/{production}', [ProductionController::class, 'update'])
 Route::resource('suppliers', SupplierController::class);
 Route::get('/stocks/create', [StockController::class, 'create'])->name('stocks.create');
 Route::post('/stocks', [StockController::class, 'store'])->name('stocks.store');
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');

@@ -6,18 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Stock extends Model
-{   
+{
     use HasFactory;
-    
-    protected $fillable = ['supplier_id', 'material_id', 'stock_in', 'stock_out', 'quantity'];
 
-    public function supplier()
-    {
-        return $this->belongsTo(Supplier::class);
-    }
+    protected $fillable = [
+        'material_id',
+        'supplier_id',
+        'stock_in',
+        'quantity',
+        'unit_cost' 
+    ];
 
     public function material()
     {
         return $this->belongsTo(Material::class);
+    }
+
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

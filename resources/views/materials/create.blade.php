@@ -16,10 +16,6 @@
             <input type="text" name="type" required placeholder="e.g., Wood, Plastic, Hardware" class="w-full border p-2 rounded focus:ring focus:ring-blue-200">
         </div>
 
-        <div class="mb-6">
-            <label class="block font-bold mb-1 text-gray-700">Unit Cost (PHP)</label>
-            <input type="number" name="unit_cost" step="0.01" min="0" required placeholder="150.00" class="w-full border p-2 rounded focus:ring focus:ring-blue-200">
-        </div>
 
         <div class="flex gap-4 mt-6">
             <button type="submit" class="bg-blue-600 text-white font-bold px-6 py-2 rounded hover:bg-blue-700 transition">Save Material</button>

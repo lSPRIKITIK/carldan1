@@ -56,7 +56,7 @@ class ProductController extends Controller
     }
     public function edit(Product $product)
     {
-        // We need all materials for the dropdown, AND we need to load the product's current recipe
+
         $materials = \App\Models\Material::all();
         $product->load('materials');
         
@@ -74,16 +74,13 @@ class ProductController extends Controller
             'materials.*.required_quantity' => 'required|integer|min:1',
         ]);
 
-        // 1. Update basic info
         $product->update($request->only(['name', 'type', 'price']));
 
-        // 2. Format the materials array for Laravel's sync() method
         $syncData = [];
         foreach ($request->materials as $mat) {
             $syncData[$mat['material_id']] = ['required_quantity' => $mat['required_quantity']];
         }
 
-        // 3. Sync wipes the old recipe and replaces it with the newly edited one
         $product->materials()->sync($syncData);
 
         return redirect()->route('products.index')->with('success', 'Product recipe updated successfully!');
@@ -91,13 +88,34 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        // Safety check: Don't delete products that are already in someone's order
         if ($product->orders()->exists()) {
             return redirect()->route('products.index')->with('error', 'Cannot delete this product because it is linked to an existing order.');
         }
 
         $product->delete();
         return redirect()->route('products.index')->with('success', 'Product deleted successfully!');
+    }
+    public function show($id)
+    {
+        $product = \App\Models\Product::with('materials.stocks')->findOrFail($id);
+
+        $buildableQuantities = [];
+
+        foreach ($product->materials as $material) {
+            $totalStock = $material->stocks->sum('quantity');
+            
+            $material->total_stock = $totalStock;
+
+            $requiredQty = $material->pivot->required_quantity;
+            
+            if ($requiredQty > 0) {
+                $buildableQuantities[] = floor($totalStock / $requiredQty); 
+            }
+        }
+
+        $maxBuildable = count($buildableQuantities) > 0 ? min($buildableQuantities) : 0;
+
+        return view('products.show', compact('product', 'maxBuildable'));
     }
     
 }

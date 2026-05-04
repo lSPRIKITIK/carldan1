@@ -7,19 +7,11 @@ use Illuminate\Http\Request;
 
 class MaterialController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search');
-
-        $materials = \App\Models\Material::with('stocks')
-            ->when($search, function ($query, $search) {
-                return $query->where('name', 'LIKE', "%{$search}%")
-                            ->orWhere('type', 'LIKE', "%{$search}%");
-            })
-            ->paginate(10)
-            ->withQueryString();
-
-        return view('materials.index', compact('materials', 'search'));
+        $materials = \App\Models\Material::with('stocks')->latest()->get();
+        
+        return view('materials.index', compact('materials'));
     }
     public function create()
     {
@@ -28,21 +20,18 @@ class MaterialController extends Controller
 
     public function store(Request $request)
     {
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|max:255',
-            'unit_cost' => 'required|numeric|min:0',
         ]);
 
-        
-        Material::create([
+        \App\Models\Material::create([
             'name' => $request->name,
-            'type' => $request->type,
-            'unit_cost' => $request->unit_cost,
+            'type' => $request->type
         ]);
 
-        
-        return redirect()->route('materials.index')->with('success', 'New material added successfully!');
+        return redirect()->route('materials.index')->with('success', 'Material created successfully!');
     }
 
     public function destroy(Material $material)

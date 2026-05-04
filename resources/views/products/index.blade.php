@@ -27,7 +27,6 @@
         </a>
     </div>
 </div>
-
 <div class="bg-white rounded border shadow-sm">
     <table class="w-full text-sm text-left">
         <thead class="bg-gray-100 text-gray-700 font-bold uppercase text-xs">
@@ -52,7 +51,12 @@
                     </td>
                     <td class="p-4 text-center">
                         <div class="flex justify-center gap-4">
-                            <a href="{{ route('products.edit', $product->id) }}" class="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-tight">
+                            <!-- New View Button -->
+                            <a href="{{ route('products.show', $product->id) }}" class="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-tight">
+                                View
+                            </a>
+                            
+                            <a href="{{ route('products.edit', $product->id) }}" class="text-indigo-500 hover:text-indigo-700 font-bold text-xs uppercase tracking-tight">
                                 Edit
                             </a>
                             <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this product?');">

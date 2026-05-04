@@ -2,48 +2,78 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Material;
+use App\Models\Supplier;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
+    /**
+     * Store a newly created stock record in storage.
+     */
     public function store(Request $request)
     {
-        $request->validate([
+        
+        $rules = [
             'material_id' => 'required|exists:materials,id',
-            'supplier_id' => 'required|exists:suppliers,id',
-            'amount' => 'required|integer|min:1',
-        ]);
+            'amount'      => 'required|integer|min:1',
+            'unit_cost'   => 'required|numeric|min:0',
+            'supplier_id' => 'required' 
+        ];
 
-        $stock = \App\Models\Stock::where('material_id', $request->material_id)->latest()->first();
-
-        if ($stock) {
-            $stock->increment('quantity', $request->amount);
-            $stock->increment('stock_in', $request->amount);
-            $stock->update(['supplier_id' => $request->supplier_id]);
-        } else {
-            \App\Models\Stock::create([
-                'material_id' => $request->material_id,
-                'supplier_id' => $request->supplier_id,
-                'stock_in' => $request->amount,
-                'stock_out' => 0,
-                'quantity' => $request->amount,
-            ]);
+        if ($request->supplier_id === 'new') {
+            $rules['supplier_name']    = 'required|string|max:255';
+            $rules['supplier_contact'] = 'required|string|max:255';
+            $rules['supplier_street']  = 'required|string|max:255';
+            $rules['supplier_city']    = 'required|string|max:255';
         }
 
-        return redirect()->route('materials.index')->with('success', 'Stock updated successfully!');
+        $request->validate($rules);
+
+        if ($request->supplier_id === 'new') {
+            $supplier = Supplier::firstOrCreate(
+                ['supplier_name' => $request->supplier_name],
+                [
+                    'supplier_contact' => $request->supplier_contact,
+                    'supplier_street'  => $request->supplier_street,
+                    'supplier_city'    => $request->supplier_city,
+                ]
+            );
+            $finalSupplierId = $supplier->id;
+        } else {
+            $finalSupplierId = $request->supplier_id;
+        }
+
+        Stock::create([
+            'material_id' => $request->material_id,
+            'supplier_id' => $finalSupplierId,
+            'stock_in'    => $request->amount,
+            'quantity'    => $request->amount,
+            'unit_cost'   => $request->unit_cost, 
+        ]);
+
+        $material = Material::findOrFail($request->material_id);
+        $material->price = $request->unit_cost;
+        $material->save();
+
+        return redirect()->route('materials.index')
+            ->with('success', 'Material restocked and unit cost updated successfully!');
     }
-    
+
+    /**
+     * Show the form for creating a new stock record.
+     */
     public function create(Request $request)
     {
         if (!$request->has('material_id')) {
-            return redirect()->route('materials.index')->with('error', 'Please select a material to restock from the table.');
+            return redirect()->route('materials.index')
+                ->with('error', 'Please select a material to restock from the table.');
         }
 
-        $material = \App\Models\Material::findOrFail($request->material_id);
-        $suppliers = \App\Models\Supplier::all();
+        $material = Material::findOrFail($request->material_id);
+        $suppliers = Supplier::all();
 
         return view('stocks.create', compact('material', 'suppliers'));
     }
-
-    
 }

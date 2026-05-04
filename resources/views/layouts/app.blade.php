@@ -11,7 +11,7 @@
     
     <nav class="mb-8 flex gap-6 border-b pb-4">
         <h1 class="font-bold text-xl text-orange-600 mr-4">Carldan Production</h1>
-        {{-- <a href="{{ route('dashboard.index') }}" class="text-blue-600 font-semibold hover:underline">Dashboard</a> --}}
+        <a href="{{ route('dashboard') }}" class="text-blue-600 font-semibold hover:underline">Dashboard</a>
         <a href="{{ route('materials.index') }}" class="text-blue-600 font-semibold hover:underline">Materials</a>
         <a href="{{ route('products.index') }}" class="text-blue-600 font-semibold hover:underline">Products</a>
         <a href="{{ route('orders.index') }}" class="text-blue-600 font-semibold hover:underline">Orders</a>

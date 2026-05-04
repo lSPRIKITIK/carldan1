@@ -9,53 +9,79 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request) 
     {
-        $search = $request->input('search');
+        $query = \App\Models\Order::with(['client', 'products', 'payments'])->latest();
 
-        $payments = \App\Models\Payment::with(['order.client'])
-            ->when($search, function ($query, $search) {
-                return $query->where('reference_number', 'LIKE', "%{$search}%")
-                    ->orWhereHas('order.client', function ($q) use ($search) {
-                        $q->where('first_name', 'LIKE', "%{$search}%")
-                        ->orWhere('last_name', 'LIKE', "%{$search}%");
-                    });
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            
+            $query->where('id', 'like', "%{$search}%")
+                ->orWhereHas('client', function($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                });
+        }
 
-        return view('payments.index', compact('payments'));
+        
+        $orders = $query->paginate(10);
+        
+        foreach ($orders as $order) {
+            $order->total_amount = $order->products->sum(function($product) {
+                return $product->pivot->quantity * $product->pivot->price;
+            });
+            
+            $order->amount_paid = $order->payments->sum('amount');
+            $order->downpayment = $order->total_amount * 0.50; 
+            $order->remaining_balance = $order->total_amount - $order->amount_paid; 
+        }
+        
+        return view('payments.index', compact('orders'));
     }
 
-    public function create(Request $request)
+    public function create(Request $request) 
     {
-        $order = \App\Models\Order::with('products')->findOrFail($request->order_id);
+        $orderId = $request->query('order_id');
+
+        
+        $order = \App\Models\Order::with(['client', 'products', 'payments'])->findOrFail($orderId);
+        $employees = \App\Models\Employee::all();
+
         
         $totalAmount = $order->products->sum(function($product) {
             return $product->pivot->quantity * $product->pivot->price;
         });
+        
+        
+        $amountPaid = $order->payments->sum('amount');
+        $remainingBalance = max(0, $totalAmount - $amountPaid);
 
-        $alreadyPaid = \App\Models\Payment::where('order_id', $order->id)->sum('amount');
-        $remainingBalance = $totalAmount - $alreadyPaid;
-
-        return view('payments.create', compact('order', 'remainingBalance'));
+        return view('payments.create', compact('order', 'employees', 'remainingBalance'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request) 
     {
+        
         $request->validate([
             'order_id' => 'required|exists:orders,id',
             'employee_id' => 'required|exists:employees,id',
             'payment_method' => 'required|string',
             'payment_date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
-            'reference_number' => 'nullable|string',
+            'amount' => 'required|numeric|min:1',
+            'reference_number' => 'nullable|string|max:255', 
         ]);
 
-        Payment::create($request->all());
+        
+        \App\Models\Payment::create([
+            'order_id' => $request->order_id,
+            'employee_id' => $request->employee_id,
+            'payment_method' => $request->payment_method,
+            'payment_date' => $request->payment_date,
+            'amount' => $request->amount,
+            'reference_number' => $request->reference_number, 
+        ]);
 
-        return redirect()->route('payments.index')->with('success', 'Payment recorded successfully!');
+        return redirect()->route('payments.index')->with('success', 'Payment processed successfully!');
     }
     public function edit(Payment $payment)
     {
@@ -83,5 +109,18 @@ class PaymentController extends Controller
     {
         $payment->delete();
         return redirect()->route('payments.index')->with('success', 'Payment deleted successfully!');
+    }
+    public function show($id)
+    {
+        $order = \App\Models\Order::with(['client', 'products', 'payments.employee'])->findOrFail($id);
+
+        $order->total_amount = $order->products->sum(function($product) {
+            return $product->pivot->quantity * $product->pivot->price;
+        });
+        
+        $order->amount_paid = $order->payments->sum('amount');
+        $order->remaining_balance = $order->total_amount - $order->amount_paid;
+
+        return view('payments.show', compact('order'));
     }
 }
