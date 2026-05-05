@@ -25,7 +25,7 @@ Route::resource('products', ProductController::class);
 Route::resource('orders', OrderController::class);
 Route::resource('payments', PaymentController::class);
 Route::put('/productions/{production}', [ProductionController::class, 'update'])->name('productions.update');
-Route::resource('suppliers', SupplierController::class);
+// Route::resource('suppliers', SupplierController::class); // removed - suppliers managed via materials view
 Route::get('/stocks/create', [StockController::class, 'create'])->name('stocks.create');
 Route::post('/stocks', [StockController::class, 'store'])->name('stocks.store');
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
