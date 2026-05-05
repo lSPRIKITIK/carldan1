@@ -27,4 +27,9 @@ class Stock extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    public function movements()
+    {
+        return $this->hasMany(\App\Models\StockMovement::class);
+    }
 }

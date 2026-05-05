@@ -64,10 +64,11 @@
 
                         <td class="p-4">
                             <span class="px-3 py-1 rounded-full text-xs font-bold shadow-sm
-                                {{ $order->status === 'Pending' ? 'bg-red-100 text-red-700' : '' }}
-                                {{ $order->status === 'In Production' ? 'bg-yellow-100 text-yellow-700' : '' }}
-                                {{ $order->status === 'Completed' ? 'bg-green-100 text-green-700' : '' }}">
-                                {{ $order->status }}
+                                {{ $order->order_status === 'Pending' ? 'bg-red-100 text-red-700' : '' }}
+                                {{ $order->order_status === 'Confirmed' ? 'bg-blue-100 text-blue-700' : '' }}
+                                {{ $order->order_status === 'In Production' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                {{ $order->order_status === 'Completed' ? 'bg-green-100 text-green-700' : '' }}">
+                                {{ $order->order_status }}
                             </span>
                         </td>
 

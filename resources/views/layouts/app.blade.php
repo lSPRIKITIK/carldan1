@@ -15,7 +15,6 @@
         <a href="{{ route('materials.index') }}" class="text-blue-600 font-semibold hover:underline">Materials</a>
         <a href="{{ route('products.index') }}" class="text-blue-600 font-semibold hover:underline">Products</a>
         <a href="{{ route('orders.index') }}" class="text-blue-600 font-semibold hover:underline">Orders</a>
-        <a href="{{ route('clients.index') }}" class="text-blue-600 font-semibold hover:underline">Clients</a>
         <a href="{{ route('payments.index') }}" class="text-blue-600 font-semibold hover:underline">Payments</a>
     </nav>
 

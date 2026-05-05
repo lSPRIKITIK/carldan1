@@ -68,6 +68,9 @@
                     
                     <td class="p-4 text-center">
                         <div class="flex justify-center gap-4">
+                            <a href="{{ route('materials.show', $material->id) }}" class="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-tight">
+                                View
+                            </a>
                             <a href="{{ route('stocks.create', ['material_id' => $material->id]) }}" class="text-green-600 hover:text-green-800 font-bold text-[11px] uppercase tracking-wider">
                                 Restock
                             </a>

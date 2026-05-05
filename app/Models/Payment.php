@@ -22,4 +22,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Order::class);
     }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
 }

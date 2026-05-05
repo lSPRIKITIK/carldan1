@@ -27,4 +27,9 @@ class Material extends Model
                     ->withPivot('required_quantity')
                     ->withTimestamps();
     }
+
+    public function stock_movements()
+    {
+        return $this->hasMany(\App\Models\StockMovement::class);
+    }
 }

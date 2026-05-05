@@ -2,41 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    /**
+     * Display the dashboard relying heavily on MySQL Views.
+     */
     public function index()
     {
-        $allOrders = \App\Models\Order::with('products')->get();
-        $totalRevenue = 0;
-        
-        foreach($allOrders as $order) {
-            $totalRevenue += $order->products->sum(function($product) {
-                return $product->pivot->quantity * $product->pivot->price;
-            });
-        }
+        // Query the reporting views directly as dictated by system architecture
+        $monthlyRevenue = DB::table('dashboard_revenue')->get();
+        $totalRevenue = DB::table('dashboard_total_revenue')->first();
 
-        $totalCollected = \App\Models\Payment::sum('amount');
-        $totalPending = max(0, $totalRevenue - $totalCollected);
+        $recentOrders = \App\Models\Order::with('client')
+            ->orderBy('order_date', 'desc')
+            ->take(5)
+            ->get();
 
-        $recentOrders = \App\Models\Order::with(['client', 'products', 'payments'])
-                            ->latest()
-                            ->paginate(10);
-
-        foreach ($recentOrders as $order) {
-            $order->total = $order->products->sum(function($product) {
-                return $product->pivot->quantity * $product->pivot->price;
-            });
-            $order->paid = $order->payments->sum('amount');
-            $order->balance = $order->total - $order->paid;
-            $order->status = $order->balance <= 0 ? 'Paid' : 'Pending';
-        }
-
-        return view('dashboard.index', compact(
-            'totalRevenue', 
-            'totalCollected', 
-            'totalPending', 
-            'recentOrders'
-        ));
+        return view('dashboard', compact('monthlyRevenue', 'totalRevenue', 'recentOrders'));
     }
 }

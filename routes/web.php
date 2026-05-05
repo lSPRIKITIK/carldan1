@@ -16,7 +16,9 @@ Route::get('/', function () {
     return redirect()->route('orders.index');
 });
 
-Route::resource('clients', ClientController::class);
+Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
+Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
+Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
 Route::resource('employees', EmployeeController::class);
 Route::resource('materials', MaterialController::class);
 Route::resource('products', ProductController::class);

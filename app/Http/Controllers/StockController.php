@@ -45,12 +45,20 @@ class StockController extends Controller
             $finalSupplierId = $request->supplier_id;
         }
 
-        Stock::create([
+        $stock = Stock::create([
             'material_id' => $request->material_id,
             'supplier_id' => $finalSupplierId,
             'stock_in'    => $request->amount,
             'quantity'    => $request->amount,
             'unit_cost'   => $request->unit_cost, 
+        ]);
+
+        // Record stock IN movement
+        \App\Models\StockMovement::create([
+            'stock_id'     => $stock->id,
+            'material_id'  => $stock->material_id,
+            'movement_type'=> 'in',
+            'quantity'     => $stock->stock_in,
         ]);
 
         $material = Material::findOrFail($request->material_id);

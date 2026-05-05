@@ -12,18 +12,53 @@ class SupplierController extends Controller
     public function index()
     {
         $suppliers = \App\Models\Supplier::all();
-        return view('suppliers.index', compact('suppliers'));
+        return view('products.suppliers_index', compact('suppliers'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'supplier_name' => 'required|string',
-            'supplier_contact' => 'required',
-            'supplier_address' => 'required',
+            'supplier_contact' => 'required|string',
+            'supplier_street' => 'required|string',
+            'supplier_city' => 'required|string',
         ]);
 
-        \App\Models\Supplier::create($request->all());
-        return back()->with('success', 'Supplier added to directory!');
+        \App\Models\Supplier::create($data);
+        return redirect()->route('suppliers.index')->with('success', 'Supplier added to directory!');
+    }
+
+    public function create()
+    {
+        return view('products.suppliers_create');
+    }
+
+    public function show(\App\Models\Supplier $supplier)
+    {
+        return view('products.suppliers_show', compact('supplier'));
+    }
+
+    public function edit(\App\Models\Supplier $supplier)
+    {
+        return view('products.suppliers_edit', compact('supplier'));
+    }
+
+    public function update(Request $request, \App\Models\Supplier $supplier)
+    {
+        $data = $request->validate([
+            'supplier_name' => 'required|string',
+            'supplier_contact' => 'required|string',
+            'supplier_street' => 'required|string',
+            'supplier_city' => 'required|string',
+        ]);
+
+        $supplier->update($data);
+        return redirect()->route('suppliers.index')->with('success', 'Supplier updated successfully!');
+    }
+
+    public function destroy(\App\Models\Supplier $supplier)
+    {
+        $supplier->delete();
+        return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully!');
     }
 }

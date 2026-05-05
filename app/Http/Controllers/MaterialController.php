@@ -62,4 +62,10 @@ class MaterialController extends Controller
 
         return redirect()->route('materials.index')->with('success', 'Material updated successfully!');
     }
+
+    public function show($id)
+    {
+        $material = \App\Models\Material::with(['stocks.supplier','stock_movements.order','stock_movements.stock'])->findOrFail($id);
+        return view('materials.show', compact('material'));
+    }
 }

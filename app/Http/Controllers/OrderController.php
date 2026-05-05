@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -112,56 +113,65 @@ class OrderController extends Controller
             $finalClientId = $request->client_id;
         }
 
-        // 4. Create the Order
-        $order = \App\Models\Order::create([
-            'client_id'     => $finalClientId,
-            'employee_id'   => $request->employee_id,
-            'order_status'  => $request->order_status,
-            'order_date'    => $request->order_date,
-            'delivery_date' => $request->delivery_date,
-        ]);
+        // 4. Create the Order + Attach products + Deduct material stocks atomically
+        $downpaymentAmount = 0;
 
-        // 5. Attach Products AND Calculate Total
-        $productsToAttach = [];
-        $totalOrderPrice = 0; 
+        $order = DB::transaction(function() use ($request, $dbProducts, $finalClientId, &$downpaymentAmount) {
+            // Create Order
+            $order = \App\Models\Order::create([
+                'client_id'     => $finalClientId,
+                'employee_id'   => $request->employee_id,
+                'status'        => $request->order_status,
+                'order_date'    => $request->order_date,
+                'delivery_date' => $request->delivery_date,
+            ]);
 
-        foreach ($request->product_id as $index => $prodId) {
-            $qty = $request->quantity[$index];
-            $price = $dbProducts[$prodId]->price;
+            // Attach Products AND Calculate Total
+            $productsToAttach = [];
+            $totalOrderPrice = 0; 
+
+            foreach ($request->product_id as $index => $prodId) {
+                $qty = $request->quantity[$index];
+                $price = $dbProducts[$prodId]->price;
+                
+                $productsToAttach[$prodId] = [
+                    'quantity' => $qty,
+                    'price'    => $price, 
+                ];
+
+                $totalOrderPrice += ($price * $qty);
+            }
             
-            $productsToAttach[$prodId] = [
-                'quantity' => $qty,
-                'price'    => $price, 
-            ];
+            $order->products()->attach($productsToAttach);
 
-            $totalOrderPrice += ($price * $qty);
-        }
-        
-        $order->products()->attach($productsToAttach);
+            // Create production entries for each product in this order
+            $productionsToCreate = [];
+            foreach ($request->product_id as $prodId) {
+                $productionsToCreate[] = [
+                    'product_id' => $prodId,
+                    'prod_status' => 'Pending',
+                ];
+            }
+            if (!empty($productionsToCreate)) {
+                $order->productions()->createMany($productionsToCreate);
+            }
 
-        // 6.a Create production entries for each product in this order
-        $productionsToCreate = [];
-        foreach ($request->product_id as $prodId) {
-            $productionsToCreate[] = [
-                'product_id' => $prodId,
-                'prod_status' => 'Pending',
-            ];
-        }
-        if (!empty($productionsToCreate)) {
-            $order->productions()->createMany($productionsToCreate);
-        }
+            // Stock deductions moved to DB triggers (MySQL). Laravel deduction removed.
 
-        // 6. Record the 50% Downpayment
-        $downpaymentAmount = $totalOrderPrice * 0.50;
+            // Record the 50% Downpayment
+            $downpaymentAmount = $totalOrderPrice * 0.50;
 
-        \App\Models\Payment::create([
-            'order_id'         => $order->id,
-            'employee_id'      => $request->employee_id,
-            'payment_method'   => $request->payment_method,
-            'payment_date'     => now(), 
-            'amount'           => $downpaymentAmount,
-            'reference_number' => $request->reference_number, 
-        ]);
+            \App\Models\Payment::create([
+                'order_id'         => $order->id,
+                'employee_id'      => $request->employee_id,
+                'payment_method'   => $request->payment_method,
+                'payment_date'     => now(), 
+                'amount'           => $downpaymentAmount,
+                'reference_number' => $request->reference_number, 
+            ]);
+
+            return $order;
+        });
 
         return redirect()->route('orders.index')->with('success', 'Order created with ₱' . number_format($downpaymentAmount, 2) . ' downpayment recorded!');
     }
@@ -215,12 +225,20 @@ class OrderController extends Controller
         $request->validate([
             'client_id'     => 'required|exists:clients,id',
             'employee_id'   => 'required|exists:employees,id',
+            'order_status'  => 'required|string',
             'order_date'    => 'required|date',
             'delivery_date' => 'nullable|date|after_or_equal:order_date',
         ]);
 
         $order = \App\Models\Order::findOrFail($id);
-        $order->update($request->only(['client_id', 'employee_id', 'order_date', 'delivery_date']));
+        // Safely updates the status. If changed to 'Confirmed', the MySQL trigger will handle stock deduction.
+        $order->update([
+            'client_id' => $request->client_id,
+            'employee_id' => $request->employee_id,
+            'status' => $request->order_status,
+            'order_date' => $request->order_date,
+            'delivery_date' => $request->delivery_date,
+        ]);
 
         return redirect()->route('orders.index')->with('success', 'Order updated successfully!');
     }

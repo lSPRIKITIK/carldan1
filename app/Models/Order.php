@@ -34,5 +34,32 @@ class Order extends Model
     {
         return $this->hasMany(Production::class);
     }
+
+    // Accessor methods for payment calculations
+    public function getTotalAmountAttribute()
+    {
+        return $this->products->sum(function($product) {
+            return $product->pivot->quantity * $product->pivot->price;
+        });
+    }
+
+    public function getAmountPaidAttribute()
+    {
+        return $this->payments->sum('amount');
+    }
+
+    public function getDownpaymentAttribute()
+    {
+        return $this->total_amount * 0.50;
+    }
+
+    public function getRemainingBalanceAttribute()
+    {
+        return $this->total_amount - $this->amount_paid;
+    }
     
+    public function getOrderStatusAttribute()
+    {
+        return $this->attributes['status'] ?? null;
+    }
 }

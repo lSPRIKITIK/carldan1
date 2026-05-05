@@ -7,27 +7,6 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
-
-        $clients = \App\Models\Client::when($search, function ($query, $search) {
-                return $query->where('first_name', 'LIKE', "%{$search}%")
-                            ->orWhere('last_name', 'LIKE', "%{$search}%")
-                            ->orWhere('contact_number', 'LIKE', "%{$search}%")
-                            ->orWhere('address', 'LIKE', "%{$search}%");
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
-
-        return view('clients.index', compact('clients', 'search'));
-    }
-
-    public function create()
-    {
-        return view('clients.create');
-    }
 
     public function store(Request $request)
     {
@@ -59,10 +38,6 @@ class ClientController extends Controller
      * @param  \App\Models\Client  $client
      * @return \Illuminate\View\View
      */
-    public function edit(Client $client)
-    {
-        return view('clients.edit', compact('client'));
-    }
 
     /**
      * Update the specified client in storage.

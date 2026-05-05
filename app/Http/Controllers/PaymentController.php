@@ -23,18 +23,7 @@ class PaymentController extends Controller
                 });
         }
 
-        
         $orders = $query->paginate(10);
-        
-        foreach ($orders as $order) {
-            $order->total_amount = $order->products->sum(function($product) {
-                return $product->pivot->quantity * $product->pivot->price;
-            });
-            
-            $order->amount_paid = $order->payments->sum('amount');
-            $order->downpayment = $order->total_amount * 0.50; 
-            $order->remaining_balance = $order->total_amount - $order->amount_paid; 
-        }
         
         return view('payments.index', compact('orders'));
     }

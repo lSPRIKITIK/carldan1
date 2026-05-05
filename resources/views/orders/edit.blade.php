@@ -30,7 +30,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div>
                 <label class="block font-bold mb-1">Order Date</label>
                 <input type="date" name="order_date" value="{{ \Carbon\Carbon::parse($order->order_date)->format('Y-m-d') }}" required class="w-full border p-2 rounded">
@@ -38,6 +38,15 @@
             <div>
                 <label class="block font-bold mb-1">Target Delivery Date</label>
                 <input type="date" name="delivery_date" value="{{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('Y-m-d') : '' }}" class="w-full border p-2 rounded">
+            </div>
+            <div>
+                <label class="block font-bold mb-1">Order Status</label>
+                <select name="order_status" required class="w-full border p-2 rounded bg-white">
+                    <option value="Pending" {{ $order->order_status === 'Pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="Confirmed" {{ $order->order_status === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                    <option value="In Production" {{ $order->order_status === 'In Production' ? 'selected' : '' }}>In Production</option>
+                    <option value="Completed" {{ $order->order_status === 'Completed' ? 'selected' : '' }}>Completed</option>
+                </select>
             </div>
         </div>
 
