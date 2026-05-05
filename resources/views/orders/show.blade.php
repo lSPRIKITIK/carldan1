@@ -12,23 +12,27 @@
 
     <!-- Top Section: Order Details -->
     <div class="grid grid-cols-2 gap-6 mb-8">
-        <!-- Client Info -->
-        <div class="bg-white border p-6 rounded shadow-sm">
-            <h3 class="text-lg font-bold text-blue-600 border-b pb-2 mb-4">Client Details</h3>
-            <p><strong>Name:</strong> {{ $order->client->first_name }} {{ $order->client->last_name }}</p>
-            <p><strong>Contact:</strong> {{ $order->client->contact_number }}</p>
-            <p><strong>Address:</strong> {{ $order->client->address }}</p>
+        <!-- Combined Order Details -->
+        <div class="bg-white border p-6 rounded shadow-sm col-span-2">
+            <h3 class="text-lg font-bold text-blue-600 border-b pb-2 mb-4">Order Details</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <h4 class="text-sm font-bold text-gray-500 uppercase mb-2">Client Information</h4>
+                    <p><strong>Name:</strong> {{ $order->client->first_name }} {{ $order->client->last_name }}</p>
+                    <p><strong>Contact:</strong> {{ $order->client->contact_number }}</p>
+                    <p><strong>Address:</strong> {{ $order->client->street }}, {{ $order->client->city }}</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-500 uppercase mb-2">Additional Information</h4>
+                    <p><strong>Order Date:</strong> {{ \Carbon\Carbon::parse($order->order_date)->format('M d, Y') }}</p>
+                    <p><strong>Target Delivery:</strong> {{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('M d, Y') : 'Not Set' }}</p>
+                    <p><strong>Handled By:</strong> {{ $order->employee->first_name }} {{ $order->employee->last_name }}</p>
+                </div>
+            </div>
         </div>
-
-        <!-- Order Info -->
-        <div class="bg-white border p-6 rounded shadow-sm">
-            <h3 class="text-lg font-bold text-orange-600 border-b pb-2 mb-4">Administrative Info</h3>
-            <p><strong>Order Date:</strong> {{ \Carbon\Carbon::parse($order->order_date)->format('M d, Y') }}</p>
-            <p><strong>Target Delivery:</strong> {{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('M d, Y') : 'Not Set' }}</p>
-            <p><strong>Handled By:</strong> {{ $order->employee->first_name }} {{ $order->employee->last_name }}</p>
-        </div>
+        
         <!-- Financial Summary Card -->
-        <div class="bg-white border p-6 rounded shadow-sm mt-6 col-span-2">
+        <div class="bg-white border p-6 rounded shadow-sm col-span-2">
             <h3 class="text-lg font-bold text-green-600 border-b pb-2 mb-4">Payment Summary</h3>
             <div class="flex justify-between items-center">
                 <div>
@@ -71,7 +75,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($order->productions as $production)
+                @forelse($order->productions as $production)
                     <tr class="hover:bg-gray-50 transition border-b">
                         <td class="p-3 font-bold text-gray-900">{{ $production->product->name }}</td>
                         
@@ -111,7 +115,11 @@
                             </td>
                         </form>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="5" class="p-4 text-center text-gray-600">No production records found for this order.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

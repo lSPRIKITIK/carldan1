@@ -44,15 +44,22 @@ class MaterialController extends Controller
         return view('materials.edit', compact('material'));
     }
 
-    public function update(Request $request, Material $material)
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'unit_cost' => 'required|numeric|min:0',
+            'name'      => 'required|string|max:255',
+            'type'      => 'required|string|max:255',
+            'unit_cost' => 'required|numeric|min:0', 
         ]);
 
-        $material->update($request->all());
+        $material = \App\Models\Material::findOrFail($id);
+        
+        $material->update([
+            'name'  => $request->name,
+            'type'  => $request->type,
+            'price' => $request->unit_cost,
+        ]);
+
         return redirect()->route('materials.index')->with('success', 'Material updated successfully!');
     }
 }

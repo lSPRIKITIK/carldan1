@@ -35,8 +35,8 @@
                 <th class="p-4 border-b w-20">ID</th>
                 <th class="p-4 border-b">Material Name</th>
                 <th class="p-4 border-b">Type</th>
-                <th class="p-4 border-b text-center">Stock Level</th>
-                <th class="p-4 border-b text-center">Unit Cost (PHP)</th>
+                <th class="p-4 border-b text-center">Stock</th>
+                <th class="p-4 border-b text-center">Unit Cost</th>
                 <th class="p-4 border-b text-center">Actions</th>
             </tr>
         </thead>

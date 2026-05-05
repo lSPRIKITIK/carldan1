@@ -31,28 +31,51 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            
-            'materials' => 'required|array', 
-            'materials.*.material_id' => 'required|exists:materials,id',
-            'materials.*.required_quantity' => 'required|integer|min:1',
+            'name'          => 'required|string|max:255',
+            'type'          => 'required|string|max:255',
+            'price'         => 'required|numeric|min:0', 
+            'material_id'   => 'required|array',
+            'material_id.*' => 'required|exists:materials,id',
+            'quantity'      => 'required|array',
+            'quantity.*'    => 'required|numeric|min:1',
         ]);
 
-        
-        $product = Product::create($request->only(['name', 'type', 'price']));
+        $totalCost = 0;
 
-        
-        $syncData = [];
-        foreach ($request->materials as $mat) {
-            $syncData[$mat['material_id']] = ['required_quantity' => $mat['required_quantity']];
+        $materials = \App\Models\Material::whereIn('id', $request->material_id)->get()->keyBy('id');
+
+        foreach ($request->material_id as $index => $materialId) {
+            $qty = $request->quantity[$index];
+            
+            if (isset($materials[$materialId])) {
+                $totalCost += ($materials[$materialId]->price * $qty);
+            }
         }
 
-        
-        $product->materials()->sync($syncData);
+        if ($totalCost > $request->price) {
+            return back()
+                ->withInput() 
+                ->withErrors([
+                    'price' => 'Loss Warning: The selling price (₱' . number_format($request->price, 2) . 
+                            ') is lower than the total cost of materials (₱' . number_format($totalCost, 2) . '). Please increase the selling price.'
+                ]);
+        }
 
-        return redirect()->route('products.index')->with('success', 'Product and Bill of Materials created!');
+        $product = \App\Models\Product::create([
+            'name'  => $request->name,
+            'type'  => $request->type,
+            'price' => $request->price,
+        ]);
+
+
+        $materialsToAttach = [];
+        foreach ($request->material_id as $index => $materialId) {
+            $materialsToAttach[$materialId] = ['required_quantity' => $request->quantity[$index]];
+        }
+        
+        $product->materials()->attach($materialsToAttach);
+
+        return redirect()->route('products.index')->with('success', 'Product created successfully!');
     }
     public function edit(Product $product)
     {
@@ -63,27 +86,51 @@ class ProductController extends Controller
         return view('products.edit', compact('product', 'materials'));
     }
 
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'materials' => 'required|array',
-            'materials.*.material_id' => 'required|exists:materials,id',
-            'materials.*.required_quantity' => 'required|integer|min:1',
+            'name'          => 'required|string|max:255',
+            'type'          => 'required|string|max:255',
+            'price'         => 'required|numeric|min:0', 
+            'material_id'   => 'required|array',
+            'material_id.*' => 'required|exists:materials,id',
+            'quantity'      => 'required|array',
+            'quantity.*'    => 'required|numeric|min:1',
         ]);
 
-        $product->update($request->only(['name', 'type', 'price']));
+        $totalCost = 0;
+        $materials = \App\Models\Material::whereIn('id', $request->material_id)->get()->keyBy('id');
 
-        $syncData = [];
-        foreach ($request->materials as $mat) {
-            $syncData[$mat['material_id']] = ['required_quantity' => $mat['required_quantity']];
+        foreach ($request->material_id as $index => $materialId) {
+            $qty = $request->quantity[$index];
+            if (isset($materials[$materialId])) {
+                $totalCost += ($materials[$materialId]->price * $qty);
+            }
+        }
+        if ($totalCost > $request->price) {
+            return back()
+                ->withInput() 
+                ->withErrors([
+                    'price' => 'Loss Warning: The selling price (₱' . number_format($request->price, 2) . 
+                            ') is lower than the total cost of materials (₱' . number_format($totalCost, 2) . '). Please increase the selling price.'
+                ]);
         }
 
-        $product->materials()->sync($syncData);
+        $product = \App\Models\Product::findOrFail($id);
+        $product->update([
+            'name'  => $request->name,
+            'type'  => $request->type,
+            'price' => $request->price,
+        ]);
 
-        return redirect()->route('products.index')->with('success', 'Product recipe updated successfully!');
+        $materialsToSync = [];
+        foreach ($request->material_id as $index => $materialId) {
+            $materialsToSync[$materialId] = ['required_quantity' => $request->quantity[$index]];
+        }
+
+        $product->materials()->sync($materialsToSync);
+
+        return redirect()->route('products.index')->with('success', 'Product updated successfully!');
     }
 
     public function destroy(Product $product)

@@ -52,4 +52,37 @@ class ClientController extends Controller
         $client->delete();
         return redirect()->route('clients.index')->with('success', 'Client deleted successfully!');
     }
+
+    /**
+     * Show the form for editing the specified client.
+     *
+     * @param  \App\Models\Client  $client
+     * @return \Illuminate\View\View
+     */
+    public function edit(Client $client)
+    {
+        return view('clients.edit', compact('client'));
+    }
+
+    /**
+     * Update the specified client in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Client  $client
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, Client $client)
+    {
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'contact_number' => 'required|string|max:20',
+            'address' => 'required|string',
+        ]);
+
+        $client->update($request->only(['first_name','middle_name','last_name','contact_number','address']));
+
+        return redirect()->route('clients.index')->with('success', 'Client updated successfully!');
+    }
 }

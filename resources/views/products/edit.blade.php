@@ -2,7 +2,15 @@
 
 @section('content')
     <h2 class="text-2xl font-bold mb-6">Edit Product: {{ $product->name }}</h2>
-
+    @if ($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 shadow-sm">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li class="text-sm font-bold">{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <form action="{{ route('products.update', $product->id) }}" method="POST" class="max-w-2xl border p-6 rounded bg-white">
         @csrf
         @method('PUT')
@@ -24,20 +32,22 @@
         </div>
 
         <div class="mb-6 border p-4 rounded bg-gray-50">
-            <h3 class="font-bold mb-3 text-lg">Bill of Materials (Recipe)</h3>
+            <h3 class="font-bold mb-3 text-lg">Required Materials</h3>
             
             <div id="material-container" class="flex flex-col gap-3">
                 <!-- Loop through existing materials to pre-fill the form -->
                 @foreach($product->materials as $index => $prodMat)
                     <div class="material-row flex gap-2">
-                        <select name="materials[{{ $index }}][material_id]" required class="w-2/3 border p-2 rounded">
+                        <select name="material_id[]" class="border p-2 rounded w-full focus:ring-2 focus:ring-blue-300 outline-none">
+                            <option value="" disabled>Select a material...</option>
                             @foreach($materials as $material)
+                                <!-- Note: You'll also have some logic here to check if it should be 'selected' -->
                                 <option value="{{ $material->id }}" {{ $material->id == $prodMat->id ? 'selected' : '' }}>
-                                    {{ $material->name }} (Cost: {{ $material->unit_cost }})
+                                    {{ $material->name }} (Cost: ₱{{ number_format($material->price, 2) }})
                                 </option>
                             @endforeach
                         </select>
-                        <input type="number" name="materials[{{ $index }}][required_quantity]" value="{{ $prodMat->pivot->required_quantity }}" required min="1" class="w-1/3 border p-2 rounded">
+                        <input type="number" name="quantity[]" value="{{ $prodMat->pivot->required_quantity }}" min="1" required class="border p-2 rounded w-32 focus:ring-2 focus:ring-blue-300 outline-none">
                         <button type="button" class="remove-btn bg-red-500 text-white px-3 rounded font-bold hover:bg-red-600">X</button>
                     </div>
                 @endforeach
@@ -56,22 +66,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Set the row count based on how many items already exist
-            let rowCount = {{ count($product->materials) }}; 
             const container = document.getElementById('material-container');
             
             document.getElementById('add-material-btn').addEventListener('click', function() {
+                // Find the first material row to clone
                 const firstRow = container.querySelector('.material-row');
                 const newRow = firstRow.cloneNode(true);
                 
-                newRow.querySelector('select').name = `materials[${rowCount}][material_id]`;
+                // Keep the names as material_id[] and quantity[]
+                newRow.querySelector('select').name = 'material_id[]';
                 newRow.querySelector('select').value = ''; 
                 
-                newRow.querySelector('input').name = `materials[${rowCount}][required_quantity]`;
+                newRow.querySelector('input').name = 'quantity[]';
                 newRow.querySelector('input').value = '';
                 
                 container.appendChild(newRow);
-                rowCount++;
             });
 
             container.addEventListener('click', function(e) {
@@ -79,7 +88,7 @@
                     if (container.querySelectorAll('.material-row').length > 1) {
                         e.target.closest('.material-row').remove();
                     } else {
-                        alert('A product must have at least one material.');
+                        alert('A product must have at least one material in its recipe.');
                     }
                 }
             });

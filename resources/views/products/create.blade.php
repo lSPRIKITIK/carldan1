@@ -2,7 +2,15 @@
 
 @section('content')
     <h2 class="text-2xl font-bold mb-6">Create New Product</h2>
-
+    @if ($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 shadow-sm">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li class="text-sm font-bold">{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <form action="{{ route('products.store') }}" method="POST" class="max-w-2xl">
         @csrf
 
@@ -19,25 +27,27 @@
         </div>
 
         <div class="mb-6">
-            <label class="block font-bold mb-1">Selling Price (PHP)</label>
+            <label class="block font-bold mb-1">Selling Price (₱)</label>
             <input type="number" name="price" step="0.01" min="0" required placeholder="1500.00" class="w-1/3 border p-2 rounded">
         </div>
 
         <!-- The Bill of Materials Section -->
         <div class="mb-6 border p-4 rounded bg-gray-50">
-            <h3 class="font-bold mb-3 text-lg">Bill of Materials</h3>
+            <h3 class="font-bold mb-3 text-lg">Required Materials</h3>
             <p class="text-sm text-gray-600 mb-4">Add the raw materials required to build exactly one unit of this product.</p>
             
             <div id="material-container" class="flex flex-col gap-3">
                 <!-- Initial Material Row -->
                 <div class="material-row flex gap-2">
-                    <select name="materials[0][material_id]" required class="w-2/3 border p-2 rounded">
-                        <option value="" disabled selected>Select a Raw Material...</option>
+                    <select name="material_id[]" class="border p-2 rounded w-full focus:ring-2 focus:ring-blue-300 outline-none">
+                        <option value="" disabled selected>Select a material...</option>
                         @foreach($materials as $material)
-                            <option value="{{ $material->id }}">{{ $material->name }} (Cost: {{ $material->unit_cost }})</option>
+                            <option value="{{ $material->id }}">
+                                {{ $material->name }} (Cost: ₱{{ number_format($material->price, 2) }})
+                            </option>
                         @endforeach
                     </select>
-                    <input type="number" name="materials[0][required_quantity]" placeholder="Qty Needed" required min="1" class="w-1/3 border p-2 rounded">
+                    <input type="number" name="quantity[]" min="1" placeholder="Qty Needed" required class="border p-2 rounded w-32 focus:ring-2 focus:ring-blue-300 outline-none">
                     <button type="button" class="remove-btn bg-red-500 text-white px-3 rounded font-bold hover:bg-red-600 transition">X</button>
                 </div>
             </div>
@@ -56,22 +66,20 @@
     <!-- JavaScript for Dynamic Rows -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            let rowCount = 1; // Array index tracker
             const container = document.getElementById('material-container');
             
             document.getElementById('add-material-btn').addEventListener('click', function() {
                 const firstRow = container.querySelector('.material-row');
                 const newRow = firstRow.cloneNode(true);
                 
-                // Update array indexes for Laravel
-                newRow.querySelector('select').name = `materials[${rowCount}][material_id]`;
+                // Keep the names as material_id[] and quantity[] so Laravel reads them as arrays!
+                newRow.querySelector('select').name = 'material_id[]';
                 newRow.querySelector('select').value = ''; 
                 
-                newRow.querySelector('input').name = `materials[${rowCount}][required_quantity]`;
+                newRow.querySelector('input').name = 'quantity[]';
                 newRow.querySelector('input').value = '';
                 
                 container.appendChild(newRow);
-                rowCount++;
             });
 
             container.addEventListener('click', function(e) {
