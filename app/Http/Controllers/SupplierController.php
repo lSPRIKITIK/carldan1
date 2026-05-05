@@ -12,7 +12,7 @@ class SupplierController extends Controller
     public function index()
     {
         $suppliers = \App\Models\Supplier::all();
-        return view('products.suppliers_index', compact('suppliers'));
+        return view('suppliers.index', compact('suppliers'));
     }
 
     public function store(Request $request)
@@ -30,17 +30,17 @@ class SupplierController extends Controller
 
     public function create()
     {
-        return view('products.suppliers_create');
+        return view('suppliers.create');
     }
 
     public function show(\App\Models\Supplier $supplier)
     {
-        return view('products.suppliers_show', compact('supplier'));
+        return view('suppliers.show', compact('supplier'));
     }
 
     public function edit(\App\Models\Supplier $supplier)
     {
-        return view('products.suppliers_edit', compact('supplier'));
+        return view('suppliers.edit', compact('supplier'));
     }
 
     public function update(Request $request, \App\Models\Supplier $supplier)

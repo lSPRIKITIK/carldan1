@@ -15,29 +15,23 @@ class ClientController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
-            'address' => 'required|string',
+            'street' => 'required|string',
+            'city' => 'required|string',
         ]);
 
-        Client::create($request->all());
+        Client::create($request->only(['first_name','middle_name','last_name','contact_number','street','city']));
 
-        return redirect()->route('clients.index')->with('success', 'New client added successfully!');
+        return redirect()->route('orders.index')->with('success', 'New client added successfully!');
     }
     public function destroy(Client $client)
     {
         if ($client->orders()->exists()) {
-            return redirect()->route('clients.index')->with('error', 'Cannot delete this client because they are linked to an existing order.');
+            return redirect()->route('orders.index')->with('error', 'Cannot delete this client because they are linked to an existing order.');
         }
 
         $client->delete();
-        return redirect()->route('clients.index')->with('success', 'Client deleted successfully!');
+        return redirect()->route('orders.index')->with('success', 'Client deleted successfully!');
     }
-
-    /**
-     * Show the form for editing the specified client.
-     *
-     * @param  \App\Models\Client  $client
-     * @return \Illuminate\View\View
-     */
 
     /**
      * Update the specified client in storage.
@@ -53,11 +47,12 @@ class ClientController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
-            'address' => 'required|string',
+            'street' => 'required|string',
+            'city' => 'required|string',
         ]);
 
-        $client->update($request->only(['first_name','middle_name','last_name','contact_number','address']));
+        $client->update($request->only(['first_name','middle_name','last_name','contact_number','street','city']));
 
-        return redirect()->route('clients.index')->with('success', 'Client updated successfully!');
+        return redirect()->route('orders.index')->with('success', 'Client updated successfully!');
     }
 }

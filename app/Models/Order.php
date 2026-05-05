@@ -58,8 +58,4 @@ class Order extends Model
         return $this->total_amount - $this->amount_paid;
     }
     
-    public function getOrderStatusAttribute()
-    {
-        return $this->attributes['status'] ?? null;
-    }
 }

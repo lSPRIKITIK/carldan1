@@ -28,8 +28,10 @@ class Stock extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    public function movements()
+    // Human-friendly batch number (no schema changes)
+    public function getBatchNumberAttribute()
     {
-        return $this->hasMany(\App\Models\StockMovement::class);
+        $date = $this->created_at ? $this->created_at->format('Ymd') : now()->format('Ymd');
+        return "BATCH-{$date}-{$this->id}";
     }
 }

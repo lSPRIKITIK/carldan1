@@ -16,6 +16,7 @@ Route::get('/', function () {
     return redirect()->route('orders.index');
 });
 
+// Clients handled inline within orders - only keep backend endpoints
 Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
 Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
 Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
@@ -25,7 +26,7 @@ Route::resource('products', ProductController::class);
 Route::resource('orders', OrderController::class);
 Route::resource('payments', PaymentController::class);
 Route::put('/productions/{production}', [ProductionController::class, 'update'])->name('productions.update');
-// Route::resource('suppliers', SupplierController::class); // removed - suppliers managed via materials view
+Route::resource('suppliers', SupplierController::class);
 Route::get('/stocks/create', [StockController::class, 'create'])->name('stocks.create');
 Route::post('/stocks', [StockController::class, 'store'])->name('stocks.store');
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');

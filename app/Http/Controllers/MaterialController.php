@@ -65,7 +65,7 @@ class MaterialController extends Controller
 
     public function show($id)
     {
-        $material = \App\Models\Material::with(['stocks.supplier','stock_movements.order','stock_movements.stock'])->findOrFail($id);
+        $material = \App\Models\Material::with(['stocks.supplier'])->findOrFail($id);
         return view('materials.show', compact('material'));
     }
 }

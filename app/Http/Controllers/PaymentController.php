@@ -32,18 +32,10 @@ class PaymentController extends Controller
     {
         $orderId = $request->query('order_id');
 
-        
         $order = \App\Models\Order::with(['client', 'products', 'payments'])->findOrFail($orderId);
         $employees = \App\Models\Employee::all();
 
-        
-        $totalAmount = $order->products->sum(function($product) {
-            return $product->pivot->quantity * $product->pivot->price;
-        });
-        
-        
-        $amountPaid = $order->payments->sum('amount');
-        $remainingBalance = max(0, $totalAmount - $amountPaid);
+        $remainingBalance = max(0, $order->total_amount - $order->amount_paid);
 
         return view('payments.create', compact('order', 'employees', 'remainingBalance'));
     }
@@ -102,13 +94,6 @@ class PaymentController extends Controller
     public function show($id)
     {
         $order = \App\Models\Order::with(['client', 'products', 'payments.employee'])->findOrFail($id);
-
-        $order->total_amount = $order->products->sum(function($product) {
-            return $product->pivot->quantity * $product->pivot->price;
-        });
-        
-        $order->amount_paid = $order->payments->sum('amount');
-        $order->remaining_balance = $order->total_amount - $order->amount_paid;
 
         return view('payments.show', compact('order'));
     }
